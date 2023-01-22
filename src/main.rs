@@ -1,15 +1,17 @@
 use color_eyre::eyre::Result;
 
-mod field;
-mod difficulty;
+use crate::difficulty::Difficulty;
+use crate::puzzle::Puzzle;
 
-fn main() -> Result<()>{
+mod difficulty;
+mod field;
+mod puzzle;
+
+fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let difficulty = difficulty::define_difficulty();
-    let field = field::Field::new(5, 4)?;
-    println!("{}", field);
-    println!("{:?}", difficulty);
+    let puzzle = Puzzle::new(5, 4, Difficulty::Diagonal);
+    println!("{}", puzzle);
 
     Ok(())
 }

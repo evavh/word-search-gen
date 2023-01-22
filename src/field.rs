@@ -1,4 +1,3 @@
-use color_eyre::eyre::Result;
 use std::fmt;
 
 pub(crate) struct Field<'a> {
@@ -22,13 +21,13 @@ impl fmt::Display for Field<'_> {
 }
 
 impl Field<'_> {
-    pub(crate) fn new(lines: usize, columns: usize) -> Result<Self> {
+    pub(crate) fn new(lines: usize, columns: usize) -> Self {
         let grid = vec![vec!["_"; columns]; lines];
 
-        Ok(Self {
+        Self {
             lines,
             columns,
             grid,
-        })
+        }
     }
 }
