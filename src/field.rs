@@ -17,16 +17,13 @@ impl fmt::Display for Field<'_> {
             .collect::<Vec<_>>()
             .join("\n");
 
-        write!(f, "{}", formatted_grid)
+        write!(f, "{}\n", formatted_grid)
     }
 }
 
 impl Field<'_> {
     pub fn new(lines: usize, columns: usize) -> Result<Self>  {
-        let mut grid = Vec::with_capacity(lines);
-        for _ in 1..lines {
-            grid.push(Vec::with_capacity(columns));
-        }
+        let grid = vec![vec!["_"; columns]; lines];
 
         Ok(Self { lines, columns, grid })
     }

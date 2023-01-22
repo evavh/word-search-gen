@@ -5,8 +5,8 @@ mod field;
 fn main() -> Result<()>{
     color_eyre::install()?;
 
-    let field = field::Field::new(3, 3)?;
-    print!("{}", field);
+    let field = field::Field::new(5, 4)?;
+    print!("{}\n", field);
 
     Ok(())
 }
