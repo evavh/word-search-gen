@@ -4,6 +4,8 @@ use std::fmt;
 use crate::difficulty::{define_difficulty, Difficulty, Direction};
 use crate::field::Field;
 
+pub(crate) enum PuzzleError {}
+
 pub(crate) struct Puzzle<'a> {
     field: Field<'a>,
     difficulty: Difficulty,
@@ -34,5 +36,19 @@ impl Puzzle<'_> {
             difficulty,
             directions,
         }
+    }
+
+    pub(crate) fn fill(
+        &mut self,
+        word_list: Vec<String>,
+    ) -> Result<(), PuzzleError> {
+        let positions = [];
+        for pos in positions {
+            for word in &word_list {
+                self.field.try_add(word.to_owned(), pos, &self.directions);
+            }
+        }
+
+        Ok(())
     }
 }

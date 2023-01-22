@@ -1,4 +1,10 @@
-use std::fmt;
+use std::{collections::HashSet, fmt};
+
+use crate::difficulty::Direction;
+
+pub(crate) enum WordAddError {
+    DoesntFit
+}
 
 pub(crate) struct Field<'a> {
     lines: usize,
@@ -29,5 +35,14 @@ impl Field<'_> {
             columns,
             grid,
         }
+    }
+
+    pub(crate) fn try_add(&mut self,
+        word: String,
+        position: (usize, usize),
+        directions: &HashSet<Direction>,
+    ) -> Result<(), WordAddError> {
+
+        Ok(())
     }
 }
