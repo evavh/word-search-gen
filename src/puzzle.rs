@@ -38,15 +38,16 @@ impl Puzzle<'_> {
 
     pub(crate) fn fill(
         &mut self,
-        word_list: Vec<String>,
+        word_list: Vec<&str>,
     ) -> Result<(), PuzzleError> {
-        let positions = [];
-        for pos in positions {
-            for word in &word_list {
-                self.field.try_add(word.to_owned(), pos, &self.directions);
+        for word in &word_list {
+            let added_word =
+                self.field.try_add(word, &self.directions);
+            match added_word {
+                Err(WordAddError::DoesntFit) => todo!("Implement backtrack"),
+                Ok(()) => (),
             }
         }
-
         Ok(())
     }
 }
