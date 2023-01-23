@@ -40,7 +40,7 @@ impl Field<'_> {
     pub(crate) fn try_add(&mut self,
         word: String,
         position: (usize, usize),
-        directions: &HashSet<Direction>,
+        directions: &Vec<Direction>,
     ) -> Result<(), WordAddError> {
 
         Ok(())

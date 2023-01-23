@@ -1,7 +1,6 @@
-use std::collections::HashSet;
 use std::fmt;
 
-use crate::difficulty::{define_difficulty, Difficulty, Direction};
+use crate::difficulty::{Difficulty, Direction};
 use crate::field::Field;
 
 pub(crate) enum PuzzleError {}
@@ -9,12 +8,12 @@ pub(crate) enum PuzzleError {}
 pub(crate) struct Puzzle<'a> {
     field: Field<'a>,
     difficulty: Difficulty,
-    directions: HashSet<Direction>,
+    directions: Vec<Direction>,
 }
 
 impl fmt::Display for Puzzle<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Difficulty: {}\n{}\n", self.difficulty, self.field)
+        write!(f, "Difficulty: {}\n{}", self.difficulty, self.field)
     }
 }
 
@@ -25,11 +24,7 @@ impl Puzzle<'_> {
         difficulty: Difficulty,
     ) -> Self {
         let field = Field::new(lines, columns);
-        let directions = define_difficulty()
-            .clone()
-            .get(&difficulty)
-            .expect("Every possible difficulty should be defined.")
-            .clone();
+        let directions = difficulty.directions();
 
         Self {
             field,

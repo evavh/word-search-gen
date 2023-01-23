@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, fmt};
+use std::fmt;
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub(crate) enum Direction {
@@ -14,9 +14,22 @@ pub(crate) enum Direction {
 
 #[derive(PartialEq, Eq, Hash, Debug, Clone)]
 pub(crate) enum Difficulty {
-    Reading,
-    Diagonal,
-    Reverse,
+    Easy,
+    Normal,
+    Hard,
+}
+
+impl Difficulty {
+    pub(crate) fn directions(&self) -> Vec<Direction> {
+        use Difficulty::*;
+        use Direction::*;
+
+        match self {
+            Easy => vec![Right, Down],
+            Normal => vec![Right, Down, RightDown, RightUp],
+            Hard => vec![Right, Down, RightDown, RightUp, LeftUp, LeftDown],
+        }
+    }
 }
 
 impl fmt::Display for Difficulty {
@@ -26,26 +39,10 @@ impl fmt::Display for Difficulty {
             f,
             "{}",
             match self {
-                Reading => "reading direction only",
-                Diagonal => "reading direction and diagonal words",
-                Reverse => "all directions",
+                Easy => "Easy - reading direction only",
+                Normal => "Normal - reading direction and diagonal words",
+                Hard => "Hard - all directions",
             }
         )
     }
-}
-
-pub(crate) fn define_difficulty() -> HashMap<Difficulty, HashSet<Direction>> {
-    use Difficulty::*;
-    use Direction::*;
-
-    HashMap::from([
-        (Reading, HashSet::from([Right, Down])),
-        (Diagonal, HashSet::from([Right, Down, RightDown, RightUp])),
-        (
-            Reverse,
-            HashSet::from([
-                Right, Left, Up, Down, RightUp, RightDown, LeftUp, LeftDown,
-            ]),
-        ),
-    ])
 }

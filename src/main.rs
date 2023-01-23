@@ -10,7 +10,7 @@ mod puzzle;
 fn main() -> Result<()> {
     color_eyre::install()?;
 
-    let puzzle = Puzzle::new(5, 4, Difficulty::Diagonal);
+    let puzzle = Puzzle::new(5, 4, Difficulty::Normal);
     println!("{}", puzzle);
 
     Ok(())
