@@ -1,9 +1,11 @@
-use std::{collections::HashSet, fmt};
+use thiserror::Error;
 
 use crate::difficulty::Direction;
 
+#[derive(Error, Debug, PartialEq, Eq)]
 pub(crate) enum WordAddError {
-    DoesntFit
+    #[error("word cannot be fit into field")]
+    DoesntFit,
 }
 
 pub(crate) struct Field<'a> {

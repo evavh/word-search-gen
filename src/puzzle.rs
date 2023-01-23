@@ -1,8 +1,11 @@
 use std::fmt;
 
-use crate::difficulty::{Difficulty, Direction};
-use crate::field::Field;
+use thiserror::Error;
 
+use crate::difficulty::{Difficulty, Direction};
+use crate::field::{Field, WordAddError};
+
+#[derive(Error, Debug)]
 pub(crate) enum PuzzleError {}
 
 pub(crate) struct Puzzle<'a> {
