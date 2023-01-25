@@ -1,6 +1,7 @@
 use std::{fmt, ops::Range};
 
 use thiserror::Error;
+use itertools::Itertools;
 
 use crate::difficulty::Direction;
 
@@ -98,11 +99,12 @@ impl Field<'_> {
 
         for direction in directions {
             let positions = self.get_possible_positions(word, direction)?;
-            let positions = positions
+
+            let mut coordinates = positions
                 .rows
-                .zip(positions.cols)
-                .collect::<Vec<_>>()
-                .shuffle(&mut rng);
+                .cartesian_product(positions.cols)
+                .collect::<Vec<_>>();
+            coordinates.shuffle(&mut rng);
         }
         Ok(())
     }
@@ -157,7 +159,6 @@ pub mod test {
                 LeftDown => PosRanges::new(0..4 + 1, 2..7 + 1),
             };
 
-            dbg!(direction);
             assert_eq!(positions, correct_positions);
         }
     }
