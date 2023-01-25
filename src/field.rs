@@ -17,10 +17,7 @@ struct PosRanges {
 }
 
 impl PosRanges {
-    fn new(
-        rows: Range<usize>,
-        cols: Range<usize>,
-    ) -> Self {
+    fn new(rows: Range<usize>, cols: Range<usize>) -> Self {
         Self { rows, cols }
     }
 }
@@ -49,7 +46,11 @@ impl Field<'_> {
     pub(crate) fn new(n_rows: usize, n_cols: usize) -> Self {
         let grid = vec![vec!["_"; n_cols]; n_rows];
 
-        Self { n_rows, n_cols, grid }
+        Self {
+            n_rows,
+            n_cols,
+            grid,
+        }
     }
 
     fn get_possible_positions(
@@ -87,13 +88,21 @@ impl Field<'_> {
         })
     }
 
-    pub(crate) fn try_add(
+    pub(crate) fn try_add<R: rand::Rng>(
         &mut self,
+        mut rng: R,
         word: &str,
         directions: &Vec<Direction>,
     ) -> Result<(), WordAddError> {
+        use rand::seq::SliceRandom;
+
         for direction in directions {
             let positions = self.get_possible_positions(word, direction)?;
+            let positions = positions
+                .rows
+                .zip(positions.cols)
+                .collect::<Vec<_>>()
+                .shuffle(&mut rng);
         }
         Ok(())
     }
@@ -108,9 +117,10 @@ pub mod test {
     fn try_add_possible() {
         let mut field = Field::new(7, 8);
         let word = "egg";
+        let mut rng = rand::thread_rng();
 
         for direction in Difficulty::Hard.directions() {
-            assert!(field.try_add(word, &vec![direction]).is_ok());
+            assert!(field.try_add(&mut rng, word, &vec![direction]).is_ok());
         }
     }
 
@@ -118,9 +128,10 @@ pub mod test {
     fn try_add_impossible() {
         let mut field = Field::new(7, 8);
         let word = "notpossss";
+        let mut rng = rand::thread_rng();
 
         for direction in Difficulty::Hard.directions() {
-            assert!(field.try_add(word, &vec![direction]).is_err());
+            assert!(field.try_add(&mut rng, word, &vec![direction]).is_err());
         }
     }
 

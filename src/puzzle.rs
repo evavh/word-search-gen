@@ -36,13 +36,14 @@ impl Puzzle<'_> {
         }
     }
 
-    pub(crate) fn fill(
+    pub(crate) fn fill<R: rand::Rng>(
         &mut self,
+        mut rng: R,
         word_list: Vec<&str>,
     ) -> Result<(), PuzzleError> {
         for word in &word_list {
             let added_word =
-                self.field.try_add(word, &self.directions);
+                self.field.try_add(&mut rng, word, &self.directions);
             match added_word {
                 Err(WordAddError::DoesntFit) => todo!("Implement backtrack"),
                 Ok(()) => (),
