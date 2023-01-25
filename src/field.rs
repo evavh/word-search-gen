@@ -10,9 +10,24 @@ pub(crate) enum WordAddError {
     DoesntFit,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+struct PosRanges {
+    rows: Range<usize>,
+    cols: Range<usize>,
+}
+
+impl PosRanges {
+    fn new(
+        rows: Range<usize>,
+        cols: Range<usize>,
+    ) -> Self {
+        Self { rows, cols }
+    }
+}
+
 pub(crate) struct Field<'a> {
-    lines: usize,
-    columns: usize,
+    n_rows: usize,
+    n_cols: usize,
     grid: Vec<Vec<&'a str>>,
 }
 
@@ -31,48 +46,44 @@ impl fmt::Display for Field<'_> {
 }
 
 impl Field<'_> {
-    pub(crate) fn new(lines: usize, columns: usize) -> Self {
-        let grid = vec![vec!["_"; columns]; lines];
+    pub(crate) fn new(n_rows: usize, n_cols: usize) -> Self {
+        let grid = vec![vec!["_"; n_cols]; n_rows];
 
-        Self {
-            lines,
-            columns,
-            grid,
-        }
+        Self { n_rows, n_cols, grid }
     }
 
     fn get_possible_positions(
         &self,
         word: &str,
         direction: &Direction,
-    ) -> Result<(Range<usize>, Range<usize>), WordAddError> {
+    ) -> Result<PosRanges, WordAddError> {
         use Direction::*;
 
-        let lines = self.lines;
-        let columns = self.columns;
+        let rows = self.n_rows;
+        let cols = self.n_cols;
 
-        if (word.len() > columns && direction != &Up && direction != &Down)
-            || (word.len() > lines && direction != &Right && direction != &Left)
+        if (word.len() > cols && direction != &Up && direction != &Down)
+            || (word.len() > rows && direction != &Right && direction != &Left)
         {
             return Err(WordAddError::DoesntFit);
         }
 
-        let all_lines = 0..lines;
-        let all_cols = 0..columns;
-        let right_col_range = 0..(columns - word.len() + 1);
-        let left_col_range = (word.len() - 1)..columns;
-        let down_line_range = 0..(lines - word.len() + 1);
-        let up_line_range = (word.len() - 1)..lines;
+        let all_rows = 0..rows;
+        let all_cols = 0..cols;
+        let right_cols = 0..(cols - word.len() + 1);
+        let left_cols = (word.len() - 1)..cols;
+        let down_rows = 0..(rows - word.len() + 1);
+        let up_rows = (word.len() - 1)..rows;
 
         Ok(match direction {
-            Right => (all_lines, right_col_range),
-            Left => (all_lines, left_col_range),
-            Down => (down_line_range, all_cols),
-            Up => (up_line_range, all_cols),
-            RightUp => (up_line_range, right_col_range),
-            RightDown => (down_line_range, right_col_range),
-            LeftUp => (up_line_range, left_col_range),
-            LeftDown => (down_line_range, left_col_range),
+            Right => PosRanges::new(all_rows, right_cols),
+            Left => PosRanges::new(all_rows, left_cols),
+            Down => PosRanges::new(down_rows, all_cols),
+            Up => PosRanges::new(up_rows, all_cols),
+            RightUp => PosRanges::new(up_rows, right_cols),
+            RightDown => PosRanges::new(down_rows, right_cols),
+            LeftUp => PosRanges::new(up_rows, left_cols),
+            LeftDown => PosRanges::new(down_rows, left_cols),
         })
     }
 
@@ -82,7 +93,7 @@ impl Field<'_> {
         directions: &Vec<Direction>,
     ) -> Result<(), WordAddError> {
         for direction in directions {
-            let pos_ranges = self.get_possible_positions(word, direction)?;
+            let positions = self.get_possible_positions(word, direction)?;
         }
         Ok(())
     }
@@ -121,22 +132,22 @@ pub mod test {
         let word = "egg";
 
         for direction in Difficulty::Hard.directions() {
-            let pos_ranges =
+            let positions =
                 field.get_possible_positions(word, &direction).unwrap();
-            let correct_pos_ranges = match direction {
+            let correct_positions = match direction {
                 // + 1 to make it an inclusive range without changing type
-                Right => (0..6 + 1, 0..5 + 1),
-                Left => (0..6 + 1, 2..7 + 1),
-                Up => (2..6 + 1, 0..7 + 1),
-                Down => (0..4 + 1, 0..7 + 1),
-                RightUp => (2..6 + 1, 0..5 + 1),
-                RightDown => (0..4 + 1, 0..5 + 1),
-                LeftUp => (2..6 + 1, 2..7 + 1),
-                LeftDown => (0..4 + 1, 2..7 + 1),
+                Right => PosRanges::new(0..6 + 1, 0..5 + 1),
+                Left => PosRanges::new(0..6 + 1, 2..7 + 1),
+                Up => PosRanges::new(2..6 + 1, 0..7 + 1),
+                Down => PosRanges::new(0..4 + 1, 0..7 + 1),
+                RightUp => PosRanges::new(2..6 + 1, 0..5 + 1),
+                RightDown => PosRanges::new(0..4 + 1, 0..5 + 1),
+                LeftUp => PosRanges::new(2..6 + 1, 2..7 + 1),
+                LeftDown => PosRanges::new(0..4 + 1, 2..7 + 1),
             };
 
             dbg!(direction);
-            assert_eq!(pos_ranges, correct_pos_ranges);
+            assert_eq!(positions, correct_positions);
         }
     }
 }
