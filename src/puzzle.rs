@@ -8,19 +8,19 @@ use crate::field::{Field, WordAddError};
 #[derive(Error, Debug)]
 pub(crate) enum PuzzleError {}
 
-pub(crate) struct Puzzle<'a> {
-    field: Field<'a>,
+pub(crate) struct Puzzle {
+    field: Field,
     difficulty: Difficulty,
     directions: Vec<Direction>,
 }
 
-impl fmt::Display for Puzzle<'_> {
+impl fmt::Display for Puzzle {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Difficulty: {}\n{}", self.difficulty, self.field)
     }
 }
 
-impl Puzzle<'_> {
+impl Puzzle {
     pub(crate) fn new(
         lines: usize,
         columns: usize,
@@ -36,6 +36,7 @@ impl Puzzle<'_> {
         }
     }
 
+    //Pre-condition: word_list contains no words with word.len() > isize::MAX
     pub(crate) fn fill<R: rand::Rng>(
         &mut self,
         mut rng: R,

@@ -1,7 +1,10 @@
-use std::{fmt, ops::Range};
+use std::{
+    fmt,
+    ops::{Add, Range},
+};
 
-use thiserror::Error;
 use itertools::Itertools;
+use thiserror::Error;
 
 use crate::difficulty::Direction;
 
@@ -23,19 +26,76 @@ impl PosRanges {
     }
 }
 
-pub(crate) struct Field<'a> {
-    n_rows: usize,
-    n_cols: usize,
-    grid: Vec<Vec<&'a str>>,
+#[derive(Clone)]
+pub(crate) struct Coordinate {
+    row: isize,
+    col: isize,
 }
 
-impl fmt::Display for Field<'_> {
+impl Add for Coordinate {
+    type Output = Coordinate;
+
+    fn add(self, rhs: Coordinate) -> Self::Output {
+        let row = self.row + rhs.row;
+        let col = self.col + rhs.col;
+        Coordinate { row, col }
+    }
+}
+
+impl Coordinate {
+    fn new(row: isize, col: isize) -> Self {
+        Coordinate { row, col }
+    }
+}
+
+struct CoordinateGenerator {
+    curr: Coordinate,
+    offset: Coordinate,
+}
+
+impl Iterator for CoordinateGenerator {
+    type Item = Coordinate;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let new = self.curr.clone() + self.offset.clone();
+        self.curr = new.clone();
+        Some(new)
+    }
+}
+
+impl CoordinateGenerator {
+    fn new(start_coordinate: Coordinate, direction: &Direction) -> Self {
+        let offset = match direction {
+            Direction::Right => Coordinate::new(0, 1),
+            Direction::Left => Coordinate::new(0, -1),
+            Direction::Up => Coordinate::new(-1, 0),
+            Direction::Down => Coordinate::new(1, 0),
+            Direction::RightUp => Coordinate::new(-1, 1),
+            Direction::RightDown => Coordinate::new(1, 1),
+            Direction::LeftUp => Coordinate::new(-1, -1),
+            Direction::LeftDown => Coordinate::new(1, -1),
+        };
+
+        CoordinateGenerator {
+            curr: start_coordinate,
+            offset,
+        }
+    }
+}
+
+pub(crate) struct Field {
+    n_rows: usize,
+    n_cols: usize,
+    grid: Vec<Vec<char>>,
+}
+
+impl fmt::Display for Field {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let formatted_grid = self
             .grid
             .clone()
             .into_iter()
-            .map(|x| x.join(" "))
+            .map(|x| x.iter().map(char::to_string).join(" "))
             .collect::<Vec<_>>()
             .join("\n");
 
@@ -43,9 +103,12 @@ impl fmt::Display for Field<'_> {
     }
 }
 
-impl Field<'_> {
+impl Field {
     pub(crate) fn new(n_rows: usize, n_cols: usize) -> Self {
-        let grid = vec![vec!["_"; n_cols]; n_rows];
+        let _i_rows: isize = n_rows.try_into().unwrap();
+        let _i_cols: isize = n_cols.try_into().unwrap();
+
+        let grid = vec![vec!['_'; n_cols]; n_rows];
 
         Self {
             n_rows,
@@ -89,6 +152,7 @@ impl Field<'_> {
         })
     }
 
+    // Cannot crash because all usizes used should fit into isizes
     pub(crate) fn try_add<R: rand::Rng>(
         &mut self,
         mut rng: R,
@@ -100,13 +164,73 @@ impl Field<'_> {
         for direction in directions {
             let positions = self.get_possible_positions(word, direction)?;
 
-            let mut coordinates = positions
+            let mut start_coordinates = positions
                 .rows
                 .cartesian_product(positions.cols)
+                .map(|(r, c)| {
+                    Coordinate::new(
+                        r.try_into().unwrap(),
+                        c.try_into().unwrap(),
+                    )
+                })
                 .collect::<Vec<_>>();
-            coordinates.shuffle(&mut rng);
+            start_coordinates.shuffle(&mut rng);
+
+            for start_coordinate in start_coordinates {
+                match self.try_fit(word, direction, &start_coordinate) {
+                    Err(WordAddError::DoesntFit) => continue,
+                    Ok(()) => {
+                        self.put_into_grid(word, direction, &start_coordinate)
+                    }
+                };
+            }
         }
         Ok(())
+    }
+
+    fn try_fit(
+        &self,
+        word: &str,
+        direction: &Direction,
+        start_coordinate: &Coordinate,
+    ) -> Result<(), WordAddError> {
+        let coordinates =
+            CoordinateGenerator::new(start_coordinate.clone(), direction);
+
+        for (i, coordinate) in coordinates.enumerate() {
+            if i < word.len() {
+                let row: usize = coordinate.row.try_into().unwrap();
+                let col: usize = coordinate.col.try_into().unwrap();
+
+                let word_letter = word.chars().nth(i).unwrap();
+                let field_letter = self.grid[row][col];
+
+                if word_letter != field_letter {
+                    return Err(WordAddError::DoesntFit);
+                }
+            } else {
+                return Ok(());
+            }
+        }
+
+        unreachable!()
+    }
+
+    fn put_into_grid(
+        &mut self,
+        word: &str,
+        direction: &Direction,
+        start_coordinate: &Coordinate,
+    ) {
+        let coordinates =
+            CoordinateGenerator::new(start_coordinate.clone(), direction);
+
+        for (i, coordinate) in coordinates.enumerate() {
+            let row: usize = coordinate.row.try_into().unwrap();
+            let col: usize = coordinate.col.try_into().unwrap();
+
+            self.grid[row][col] = word.chars().nth(i).unwrap();
+        }
     }
 }
 
