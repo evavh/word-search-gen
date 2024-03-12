@@ -8,6 +8,8 @@ use thiserror::Error;
 
 use crate::difficulty::Direction;
 
+const DEFAULT_CHAR: char = '_';
+
 #[derive(Error, Debug, PartialEq, Eq)]
 pub(crate) enum WordAddError {
     #[error("word cannot be fit into field")]
@@ -39,6 +41,12 @@ impl Add for Coordinate {
         let row = self.row + rhs.row;
         let col = self.col + rhs.col;
         Coordinate { row, col }
+    }
+}
+
+impl fmt::Display for Coordinate {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "({}, {})\n", self.row, self.col)
     }
 }
 
@@ -108,7 +116,7 @@ impl Field {
         let _i_rows: isize = n_rows.try_into().unwrap();
         let _i_cols: isize = n_cols.try_into().unwrap();
 
-        let grid = vec![vec!['_'; n_cols]; n_rows];
+        let grid = vec![vec![DEFAULT_CHAR; n_cols]; n_rows];
 
         Self {
             n_rows,
@@ -198,6 +206,7 @@ impl Field {
             CoordinateGenerator::new(start_coordinate.clone(), direction);
 
         for (i, coordinate) in coordinates.enumerate() {
+            println!("Trying to fit letter {i} of word {word} at {coordinate}");
             if i < word.len() {
                 let row: usize = coordinate.row.try_into().unwrap();
                 let col: usize = coordinate.col.try_into().unwrap();
@@ -205,7 +214,9 @@ impl Field {
                 let word_letter = word.chars().nth(i).unwrap();
                 let field_letter = self.grid[row][col];
 
-                if word_letter != field_letter {
+                if field_letter == DEFAULT_CHAR {
+                    continue;
+                } else if word_letter != field_letter {
                     return Err(WordAddError::DoesntFit);
                 }
             } else {
@@ -229,7 +240,9 @@ impl Field {
             let row: usize = coordinate.row.try_into().unwrap();
             let col: usize = coordinate.col.try_into().unwrap();
 
-            self.grid[row][col] = word.chars().nth(i).unwrap();
+            let letter = word.chars().nth(i).unwrap();
+            println!("Putting letter {letter} in grid");
+            self.grid[row][col] = letter;
         }
     }
 }
