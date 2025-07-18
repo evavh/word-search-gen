@@ -28,7 +28,7 @@ impl PosRanges {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Copy)]
 pub(crate) struct Coordinate {
     row: isize,
     col: isize,
@@ -57,6 +57,8 @@ impl Coordinate {
 }
 
 struct CoordinateGenerator {
+    n_rows: isize,
+    n_cols: isize,
     curr: Coordinate,
     offset: Coordinate,
 }
@@ -65,14 +67,27 @@ impl Iterator for CoordinateGenerator {
     type Item = Coordinate;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let new = self.curr.clone() + self.offset.clone();
-        self.curr = new.clone();
-        Some(new)
+        if self.curr.row >= self.n_rows
+            || self.curr.col >= self.n_cols
+            || self.curr.row < 0
+            || self.curr.col < 0
+        {
+            None
+        } else {
+            let old = self.curr;
+            let new = old.clone() + self.offset.clone();
+            self.curr = new.clone();
+            Some(old)
+        }
     }
 }
 
 impl CoordinateGenerator {
-    fn new(start_coordinate: Coordinate, direction: &Direction) -> Self {
+    fn new(
+        field: &Field,
+        start_coordinate: Coordinate,
+        direction: &Direction,
+    ) -> Self {
         let offset = match direction {
             Direction::Right => Coordinate::new(0, 1),
             Direction::Left => Coordinate::new(0, -1),
@@ -85,6 +100,8 @@ impl CoordinateGenerator {
         };
 
         CoordinateGenerator {
+            n_rows: field.n_rows.try_into().unwrap(),
+            n_cols: field.n_cols.try_into().unwrap(),
             curr: start_coordinate,
             offset,
         }
@@ -188,7 +205,8 @@ impl Field {
                 match self.try_fit(word, direction, &start_coordinate) {
                     Err(WordAddError::DoesntFit) => continue,
                     Ok(()) => {
-                        self.put_into_grid(word, direction, &start_coordinate)
+                        self.put_into_grid(word, direction, &start_coordinate);
+                        return Ok(());
                     }
                 };
             }
@@ -202,8 +220,11 @@ impl Field {
         direction: &Direction,
         start_coordinate: &Coordinate,
     ) -> Result<(), WordAddError> {
-        let coordinates =
-            CoordinateGenerator::new(start_coordinate.clone(), direction);
+        let coordinates = CoordinateGenerator::new(
+            &self,
+            start_coordinate.clone(),
+            direction,
+        );
 
         for (i, coordinate) in coordinates.enumerate() {
             println!("Trying to fit letter {i} of word {word} at {coordinate}");
@@ -224,7 +245,7 @@ impl Field {
             }
         }
 
-        unreachable!()
+        Err(WordAddError::DoesntFit)
     }
 
     fn put_into_grid(
@@ -233,14 +254,19 @@ impl Field {
         direction: &Direction,
         start_coordinate: &Coordinate,
     ) {
-        let coordinates =
-            CoordinateGenerator::new(start_coordinate.clone(), direction);
+        let coordinates = CoordinateGenerator::new(
+            &self,
+            start_coordinate.clone(),
+            direction,
+        );
 
         for (i, coordinate) in coordinates.enumerate() {
-            let row: usize = coordinate.row.try_into().unwrap();
-            let col: usize = coordinate.col.try_into().unwrap();
+            let row: usize = dbg!(coordinate.row).try_into().unwrap();
+            let col: usize = dbg!(coordinate.col).try_into().unwrap();
 
-            let letter = word.chars().nth(i).unwrap();
+            let Some(letter) = word.chars().nth(i) else {
+                return;
+            };
             println!("Putting letter {letter} in grid");
             self.grid[row][col] = letter;
         }
