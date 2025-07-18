@@ -11,10 +11,9 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let rng = rand::thread_rng();
-    let mut puzzle = Puzzle::new(5, 4, Difficulty::Normal);
-    println!("{}", puzzle);
+    let mut puzzle = Puzzle::new(5, 4, Difficulty::Hard);
 
-    let word_list = vec!["egg", "good"];
+    let word_list = vec!["egg", "good", "leg"];
     puzzle.fill(rng, word_list).unwrap();
     println!("{}", puzzle);
 

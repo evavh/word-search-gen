@@ -44,8 +44,7 @@ impl Puzzle {
     ) -> Result<(), PuzzleError> {
         for word in &word_list {
             let added_word =
-                self.field.try_add(&mut rng, word, &self.directions);
-            println!("{}", self.field);
+                self.field.try_add(&mut rng, word, dbg!(&self.directions));
             match added_word {
                 Err(WordAddError::DoesntFit) => todo!("Implement backtrack"),
                 Ok(()) => (),

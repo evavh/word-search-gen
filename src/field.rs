@@ -186,8 +186,12 @@ impl Field {
     ) -> Result<(), WordAddError> {
         use rand::seq::SliceRandom;
 
-        for direction in directions {
-            let positions = self.get_possible_positions(word, direction)?;
+        let mut random_directions = directions.clone();
+        random_directions.shuffle(&mut rng);
+
+        for direction in random_directions {
+            dbg!(&direction);
+            let positions = self.get_possible_positions(word, &direction)?;
 
             let mut start_coordinates = positions
                 .rows
@@ -202,10 +206,10 @@ impl Field {
             start_coordinates.shuffle(&mut rng);
 
             for start_coordinate in start_coordinates {
-                match self.try_fit(word, direction, &start_coordinate) {
+                match self.try_fit(word, &direction, &start_coordinate) {
                     Err(WordAddError::DoesntFit) => continue,
                     Ok(()) => {
-                        self.put_into_grid(word, direction, &start_coordinate);
+                        self.put_into_grid(word, &direction, &start_coordinate);
                         return Ok(());
                     }
                 };
